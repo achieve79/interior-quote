@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>리모델링 견적 계산기</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial;margin:22px;background:#fafafa}
+    .wrap{max-width:980px;margin:0 auto}
+    .card{background:#fff;border:1px solid #e6e6e6;border-radius:16px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+    h1{margin:0 0 10px;font-size:22px}
+    h2{margin:18px 0 10px;font-size:16px}
+    label{display:block;margin:10px 0 6px;font-weight:700}
+    input,select,button{width:100%;padding:12px;border:1px solid #d0d0d0;border-radius:12px;font-size:15px}
+    button{cursor:pointer;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .pill{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #e4e4e4;border-radius:12px}
+    .pill input{width:auto}
+    .muted{color:#666;font-size:13px;line-height:1.4}
+    .result{white-space:pre-wrap;background:#f6f6f6;border-radius:14px;padding:14px;margin-top:12px;border:1px solid #e6e6e6}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .actions button{width:auto;flex:1;min-width:140px}
+    .sumRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed #e0e0e0}
+    .sumRow:last-child{border-bottom:none}
+    .big{font-size:18px;font-weight:900}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:12px;margin-left:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>리모델링 견적 계산기 <span class="badge">평당 + 품목 + 옵션</span></h1>
+      <p class="muted">
+        상위: 평수×단가(기본/표준/고급) / 하위: 도배·장판(평당) + 싱크대·욕실·필름(정액) + 옵션(가산/할인)
+      </p>
+
+      <div class="grid">
+        <div>
+          <label>고객명</label>
+          <input id="customer" placeholder="예: 홍길동" />
+        </div>
+        <div>
+          <label>연락처(선택)</label>
+          <input id="phone" placeholder="예: 010-1234-5678" />
+        </div>
+      </div>
+
+      <h2>① 기본 공사비 (평당)</h2>
+      <div class="grid">
+        <div>
+          <label>평수</label>
+          <input id="pyeong" type="number" min="1" placeholder="예: 30" />
+        </div>
+        <div>
+          <label>등급(평당 단가)</label>
+          <select id="grade">
+            <option value="basic">기본형 (300,000원/평)</option>
+            <option value="standard">표준형 (450,000원/평)</option>
+            <option value="premium">고급형 (650,000원/평)</option>
+          </select>
+        </div>
+      </div>
+
+      <h2>② 품목 공사비 (추가)</h2>
+      <div class="grid3">
+        <div class="pill">
+          <input id="wpaper_on" type="checkbox" />
+          <div>
+            <div><b>도배</b> <span class="muted">(55,000원/평)</span></div>
+            <div class="muted">평수 기준 자동 계산</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="floor_on" type="checkbox" />
+          <div>
+            <div><b>장판</b> <span class="muted">(80,000원/평)</span></div>
+            <div class="muted">평수 기준 자동 계산</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="kitchen_on" type="checkbox" />
+          <div>
+            <div><b>싱크대</b> <span class="muted">(3,500,000원)</span></div>
+            <div class="muted">정액 1식</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="bath_on" type="checkbox" />
+          <div>
+            <div><b>욕실</b> <span class="muted">(2,800,000원)</span></div>
+            <div class="muted">정액 1개</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="film_on" type="checkbox" />
+          <div>
+            <div><b>필름</b> <span class="muted">(1,200,000원)</span></div>
+            <div class="muted">정액 세트</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="etc_on" type="checkbox" />
+          <div>
+            <div><b>기타(직접 입력)</b></div>
+            <div class="muted">금액 직접 추가</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="etcBox" style="display:none;margin-top:10px">
+        <label>기타 항목명</label>
+        <input id="etc_name" placeholder="예: 붙박이장 / 조명 / 도어락 등" />
+        <label>기타 금액(원)</label>
+        <input id="etc_price" type="number" min="0" placeholder="예: 500000" />
+      </div>
+
+      <h2>③ 옵션 (가산/할인)</h2>
+      <div class="grid3">
+        <div class="pill">
+          <input id="opt_demo" type="checkbox" />
+          <div>
+            <div><b>철거 포함</b> <span class="muted">(+800,000원)</span></div>
+            <div class="muted">기본 철거/정리</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="opt_waste" type="checkbox" />
+          <div>
+            <div><b>폐기물 처리</b> <span class="muted">(+400,000원)</span></div>
+            <div class="muted">폐기물/마대</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="opt_hard" type="checkbox" />
+          <div>
+            <div><b>현장 난이도</b> <span class="muted">(+5%)</span></div>
+            <div class="muted">엘베 없음 등</div>
+          </div>
+        </div>
+        <div class="pill">
+          <input id="opt_discount" type="checkbox" />
+          <div>
+            <div><b>프로모션 할인</b> <span class="muted">(-300,000원)</span></div>
+            <div class="muted">기간 할인</div>
+          </div>
+        </div>
+      </div>
+
+      <label>메모</label>
+      <input id="memo" placeholder="예: 자재 옵션 / 일정 / 현장 특이사항" />
+
+      <div class="actions">
+        <button id="calcBtn">견적 계산</button>
+        <button id="copyBtn" type="button">견적 복사</button>
+        <button id="printBtn" type="button">인쇄(PDF)</button>
+        <button id="resetBtn" type="button">초기화</button>
+      </div>
+
+      <div class="result" id="out">평수와 항목을 선택한 뒤 “견적 계산”을 눌러보세요.</div>
+
+      <h2>요약</h2>
+      <div class="result" id="sumBox">-</div>
+    </div>
+  </div>
+
+<script>
+  // 단가표(확정)
+  const RATE = { basic: 300000, standard: 450000, premium: 650000 };
+  const ITEM = {
+    wallpaper_per_pyeong: 55000,
+    floor_per_pyeong: 80000,
+    kitchen_flat: 3500000,
+    bath_flat: 2800000,
+    film_flat: 1200000
+  };
+  const OPT = {
+    demo: 800000,
+    waste: 400000,
+    hard_pct: 0.05,
+    discount: -300000
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  // 기타 입력 토글
+  $('etc_on').addEventListener('change', () => {
+    $('etcBox').style.display = $('etc_on').checked ? 'block' : 'none';
+  });
+
+  function fmt(n){ return (Math.round(n)).toLocaleString('ko-KR'); }
+
+  function calc() {
+    const customer = $('customer').value || '(고객명 미입력)';
+    const phone = $('phone').value || '-';
+    const memo = $('memo').value || '-';
+
+    const pyeong = Number($('pyeong').value || 0);
+    const grade = $('grade').value;
+
+    // 안전장치: 평수 없으면 계산이 의미가 없음
+    if (!pyeong || pyeong < 1) {
+      $('out').textContent = '평수를 먼저 입력해 주세요 (예: 30).';
+      $('sumBox').textContent = '-';
+      return { ok:false };
+    }
+
+    // ① 기본 공사비
+    const baseUnit = RATE[grade];
+    const baseCost = pyeong * baseUnit;
+
+    // ② 품목 합산
+    let items = [];
+    let itemTotal = 0;
+
+    if ($('wpaper_on').checked) {
+      const c = pyeong * ITEM.wallpaper_per_pyeong;
+      items.push({ name:'도배', cost:c, note:`${ITEM.wallpaper_per_pyeong.toLocaleString()}원/평 × ${pyeong}평` });
+      itemTotal += c;
+    }
+    if ($('floor_on').checked) {
+      const c = pyeong * ITEM.floor_per_pyeong;
+      items.push({ name:'장판', cost:c, note:`${ITEM.floor_per_pyeong.toLocaleString()}원/평 × ${pyeong}평` });
+      itemTotal += c;
+    }
+    if ($('kitchen_on').checked) {
+      const c = ITEM.kitchen_flat;
+      items.push({ name:'싱크대', cost:c, note:'정액 1식' });
+      itemTotal += c;
+    }
+    if ($('bath_on').checked) {
+      const c = ITEM.bath_flat;
+      items.push({ name:'욕실', cost:c, note:'정액 1개' });
+      itemTotal += c;
+    }
+    if ($('film_on').checked) {
+      const c = ITEM.film_flat;
+      items.push({ name:'필름', cost:c, note:'정액 세트' });
+      itemTotal += c;
+    }
+    if ($('etc_on').checked) {
+      const etcName = $('etc_name').value || '기타';
+      const etcPrice = Number($('etc_price').value || 0);
+      if (etcPrice > 0) {
+        items.push({ name:etcName, cost:etcPrice, note:'직접 입력' });
+        itemTotal += etcPrice;
+      } else {
+        items.push({ name:etcName, cost:0, note:'금액 미입력' });
+      }
+    }
+
+    // ③ 옵션
+    let optLines = [];
+    let optFlat = 0;
+    let optPct = 0;
+
+    if ($('opt_demo').checked) { optFlat += OPT.demo; optLines.push(`- 철거 포함: +${fmt(OPT.demo)}원`); }
+    if ($('opt_waste').checked) { optFlat += OPT.waste; optLines.push(`- 폐기물 처리: +${fmt(OPT.waste)}원`); }
+    if ($('opt_discount').checked) { optFlat += OPT.discount; optLines.push(`- 프로모션 할인: ${OPT.discount < 0 ? '' : '+'}${fmt(OPT.discount)}원`); }
+    if ($('opt_hard').checked) { optPct += OPT.hard_pct; optLines.push(`- 현장 난이도: +${Math.round(OPT.hard_pct*100)}%`); }
+
+    // 퍼센트 옵션은 (기본+품목+정액옵션)에 적용
+    const prePct = baseCost + itemTotal + optFlat;
+    const pctAdd = prePct * optPct;
+
+    const total = prePct + pctAdd;
+
+    // 출력 텍스트
+    const gradeText = $('grade').selectedOptions[0].text;
+    let lines = [];
+    lines.push(`[견적서]`);
+    lines.push(`고객: ${customer}`);
+    lines.push(`연락처: ${phone}`);
+    lines.push(`평수: ${pyeong}평`);
+    lines.push(`등급: ${gradeText}`);
+    lines.push(``);
+    lines.push(`① 기본 공사비: ${fmt(baseCost)}원 ( ${fmt(baseUnit)}원/평 × ${pyeong}평 )`);
+    lines.push(``);
+    lines.push(`② 품목 공사비: ${fmt(itemTotal)}원`);
+    if (items.length === 0) lines.push(`- 선택된 품목 없음`);
+    items.forEach(it => lines.push(`- ${it.name}: ${fmt(it.cost)}원 (${it.note})`));
+    lines.push(``);
+    lines.push(`③ 옵션: ${fmt(optFlat)}원${optPct>0 ? ` + ${Math.round(optPct*100)}%` : ''}`);
+    if (optLines.length === 0) lines.push(`- 선택된 옵션 없음`);
+    optLines.forEach(s => lines.push(s));
+    if (optPct>0) lines.push(`- 퍼센트 가산: +${fmt(pctAdd)}원`);
+    lines.push(``);
+    lines.push(`--------------------`);
+    lines.push(`총액: ${fmt(total)}원`);
+    lines.push(`메모: ${memo}`);
+
+    $('out').textContent = lines.join('\n');
+
+    // 요약 박스
+    const sum = [];
+    sum.push(`기본 공사비: ${fmt(baseCost)}원`);
+    sum.push(`품목 합산: ${fmt(itemTotal)}원`);
+    sum.push(`정액 옵션: ${fmt(optFlat)}원`);
+    if (optPct>0) sum.push(`퍼센트 가산: ${fmt(pctAdd)}원`);
+    sum.push(`총액: ${fmt(total)}원`);
+
+    $('sumBox').innerHTML = sum.map(s=>{
+      const [k,v]=s.split(': ');
+      return `<div class="sumRow"><div>${k}</div><div class="${k==='총액'?'big':''}">${v}</div></div>`;
+    }).join('');
+
+    return { ok:true, text: $('out').textContent };
+  }
+
+  $('calcBtn').addEventListener('click', calc);
+
+  $('copyBtn').addEventListener('click', async () => {
+    const r = calc();
+    if (!r.ok) return;
+    try {
+      await navigator.clipboard.writeText(r.text);
+      $('copyBtn').textContent = '복사 완료!';
+      setTimeout(()=> $('copyBtn').textContent = '견적 복사', 900);
+    } catch (e) {
+      alert('복사 권한이 막혀있으면, 결과를 길게 눌러 수동 복사해 주세요.');
+    }
+  });
+
+  $('printBtn').addEventListener('click', () => {
+    // 인쇄 화면에서 result만 보이게 하려면 추가 CSS가 필요하지만, 초보 버전에선 그대로 인쇄
+    window.print();
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    document.querySelectorAll('input').forEach(i=>{
+      if (i.type === 'checkbox') i.checked = false;
+      else i.value = '';
+    });
+    $('grade').value = 'basic';
+    $('etcBox').style.display = 'none';
+    $('out').textContent = '평수와 항목을 선택한 뒤 “견적 계산”을 눌러보세요.';
+    $('sumBox').textContent = '-';
+  });
+</script>
+</body>
+</html>
