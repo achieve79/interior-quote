@@ -176,27 +176,42 @@
   </div>
 </div>
           <div class="pill">
-          <input id="bath_on" type="checkbox" />
-          <div>
-            <div><b>욕실</b> <span class="muted">(2,800,000원)</span></div>
-            <div class="muted">정액 1개</div>
-          </div>
-        </div>
+  <input id="bath_on" type="checkbox" />
+  <div style="width:100%;">
+    <div>
+      <b>욕실</b> <span class="muted">(선택 금액/개소)</span>
+    </div>
+    <div class="muted">등급 선택 + 개소수 입력</div>
+
+    <div style="margin-top:8px;">
+      <select id="bath_grade"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+        <option value="2500000">기본형 (2,500,000원/개소)</option>
+        <option value="3500000">중급형 (3,500,000원/개소)</option>
+        <option value="5000000">고급형 (5,000,000원/개소)</option>
+      </select>
+
+      <input id="bath_count" type="number" min="0" step="1"
+        style="margin-top:10px;"
+        placeholder="개소수 입력 (예: 2)" />
+    </div>
+  </div>
+</div>
         <div class="pill">
-          <input id="film_on" type="checkbox" />
-          <div>
-            <div><b>필름</b> <span class="muted">(1,200,000원)</span></div>
-            <div class="muted">정액 세트</div>
-          </div>
-        </div>
-        <div class="pill">
-          <input id="etc_on" type="checkbox" />
-          <div>
-            <div><b>기타(직접 입력)</b></div>
-            <div class="muted">금액 직접 추가</div>
-          </div>
-        </div>
-      </div>
+  <input id="film_on" type="checkbox" />
+  <div style="width:100%;">
+    <div><b>필름</b> <span class="muted">(1,200,000원)</span></div>
+    <div class="muted">정액 세트 + 종류 선택</div>
+
+    <div style="margin-top:8px;">
+      <select id="film_type"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+        <option value="방염">방염</option>
+        <option value="비방염">비방염</option>
+      </select>
+    </div>
+  </div>
+</div>
 
       <div id="etcBox" style="display:none;margin-top:10px">
         <label>기타 항목명</label>
@@ -208,12 +223,12 @@
       <h2>③ 옵션 (가산/할인)</h2>
       <div class="grid3">
         <div class="pill">
-          <input id="opt_demo" type="checkbox" />
-          <div>
-            <div><b>철거 포함</b> <span class="muted">(+800,000원)</span></div>
-            <div class="muted">기본 철거/정리</div>
-          </div>
-        </div>
+  <input id="opt_demo" type="checkbox" />
+  <div>
+    <div><b>철거</b> <span class="muted">(평당 120,000원)</span></div>
+    <div class="muted">평수 기준 자동 계산</div>
+  </div>
+</div>
         <div class="pill">
           <input id="opt_waste" type="checkbox" />
           <div>
@@ -258,7 +273,6 @@
   // 단가표(확정)
   const RATE = { basic: 300000, standard: 450000, premium: 650000 };
  const ITEM = {
-  bath_flat: 2800000,
   film_flat: 1200000,
 
   // 가구 단가
@@ -267,11 +281,11 @@
   shoe_per_m: 900000
 };
   const OPT = {
-    demo: 800000,
-    waste: 400000,
-    hard_pct: 0.05,
-    discount: -300000
-  };
+  demo_per_pyeong: 120000,  // ✅ 철거: 평당
+  waste: 400000,
+  hard_pct: 0.05,
+  discount: -300000
+};
 
   const $ = (id) => document.getElementById(id);
 
@@ -282,6 +296,9 @@
   $('wpaper_type').addEventListener('change', calc);
   $('floor_type').addEventListener('change', calc);
   $('floor_subwork').addEventListener('change', calc);
+  $('bath_grade').addEventListener('change', calc);
+  $('bath_count').addEventListener('input', calc);
+  $('film_type').addEventListener('change', calc);
   function fmt(n){ return (Math.round(n)).toLocaleString('ko-KR'); }
 
   function calc() {
@@ -344,16 +361,26 @@
   itemTotal += c;
 }
     
-    if ($('bath_on').checked) {
-      const c = ITEM.bath_flat;
-      items.push({ name:'욕실', cost:c, note:'정액 1개' });
-      itemTotal += c;
-    }
+   if ($('bath_on').checked) {
+  const unit = Number($('bath_grade').value || 0);   // 개소당 금액
+  const count = Number($('bath_count').value || 0);  // 개소수
+  const gradeText = $('bath_grade').selectedOptions[0].text;
+
+  const c = unit * count;
+
+  if (count > 0) {
+    items.push({ name:'욕실', cost:c, note:`${gradeText} × ${count}개소` });
+    itemTotal += c;
+  } else {
+    items.push({ name:'욕실', cost:0, note:'개소수 미입력' });
+  }
+}
     if ($('film_on').checked) {
-      const c = ITEM.film_flat;
-      items.push({ name:'필름', cost:c, note:'정액 세트' });
-      itemTotal += c;
-    }
+  const c = ITEM.film_flat;
+  const type = $('film_type')?.value || '미선택';
+  items.push({ name:'필름', cost:c, note:`정액 세트 / ${type}` });
+  itemTotal += c;
+}
     if ($('etc_on').checked) {
       const etcName = $('etc_name').value || '기타';
       const etcPrice = Number($('etc_price').value || 0);
@@ -370,7 +397,11 @@
     let optFlat = 0;
     let optPct = 0;
 
-    if ($('opt_demo').checked) { optFlat += OPT.demo; optLines.push(`- 철거 포함: +${fmt(OPT.demo)}원`); }
+    if ($('opt_demo').checked) {
+  const c = pyeong * OPT.demo_per_pyeong;
+  optFlat += c;
+  optLines.push(`- 철거: +${fmt(OPT.demo_per_pyeong)}원/평 × ${pyeong}평 = +${fmt(c)}원`);
+}
     if ($('opt_waste').checked) { optFlat += OPT.waste; optLines.push(`- 폐기물 처리: +${fmt(OPT.waste)}원`); }
     if ($('opt_discount').checked) { optFlat += OPT.discount; optLines.push(`- 프로모션 할인: ${OPT.discount < 0 ? '' : '+'}${fmt(OPT.discount)}원`); }
     if ($('opt_hard').checked) { optPct += OPT.hard_pct; optLines.push(`- 현장 난이도: +${Math.round(OPT.hard_pct*100)}%`); }
