@@ -134,15 +134,48 @@
       </div>
     </div>
   </div>
+</div><!-- ✅ 가구: 붙박이장 (자당 180,000원) -->
+<div class="pill">
+  <input id="closet_on" type="checkbox" />
+  <div style="width:100%;">
+    <div>
+      <b>붙박이장</b> <span class="muted">(자당 180,000원)</span>
+    </div>
+    <div class="muted">‘자’ 숫자만 입력 (예: 8)</div>
+    <div style="margin-top:8px;">
+      <input id="closet_ja" type="number" min="0" step="0.1" placeholder="자 수 입력 (예: 8)" />
+    </div>
+  </div>
 </div>
-        <div class="pill">
-          <input id="kitchen_on" type="checkbox" />
-          <div>
-            <div><b>싱크대</b> <span class="muted">(3,500,000원)</span></div>
-            <div class="muted">정액 1식</div>
-          </div>
-        </div>
-        <div class="pill">
+
+<!-- ✅ 가구: 싱크대 기본형 (M당 900,000원) -->
+<div class="pill">
+  <input id="sink_on" type="checkbox" />
+  <div style="width:100%;">
+    <div>
+      <b>싱크대(기본형)</b> <span class="muted">(M당 900,000원)</span>
+    </div>
+    <div class="muted">수전/싱크볼/악세사리 별도 · 미터 숫자만 입력</div>
+    <div style="margin-top:8px;">
+      <input id="sink_m" type="number" min="0" step="0.1" placeholder="미터 수 입력 (예: 3.2)" />
+    </div>
+  </div>
+</div>
+
+<!-- ✅ 가구: 신발장 (M당 900,000원) -->
+<div class="pill">
+  <input id="shoe_on" type="checkbox" />
+  <div style="width:100%;">
+    <div>
+      <b>신발장</b> <span class="muted">(M당 900,000원)</span>
+    </div>
+    <div class="muted">미터 숫자만 입력 (예: 2.4)</div>
+    <div style="margin-top:8px;">
+      <input id="shoe_m" type="number" min="0" step="0.1" placeholder="미터 수 입력 (예: 2.4)" />
+    </div>
+  </div>
+</div>
+          <div class="pill">
           <input id="bath_on" type="checkbox" />
           <div>
             <div><b>욕실</b> <span class="muted">(2,800,000원)</span></div>
@@ -224,11 +257,15 @@
 <script>
   // 단가표(확정)
   const RATE = { basic: 300000, standard: 450000, premium: 650000 };
-  const ITEM = {
-    kitchen_flat: 3500000,
-    bath_flat: 2800000,
-    film_flat: 1200000
-  };
+ const ITEM = {
+  bath_flat: 2800000,
+  film_flat: 1200000,
+
+  // 가구 단가
+  closet_per_ja: 180000,
+  sink_basic_per_m: 900000,
+  shoe_per_m: 900000
+};
   const OPT = {
     demo: 800000,
     waste: 400000,
@@ -306,11 +343,7 @@
   items.push({ name:'바닥', cost:c, note: noteParts.join(' / ') });
   itemTotal += c;
 }
-    if ($('kitchen_on').checked) {
-      const c = ITEM.kitchen_flat;
-      items.push({ name:'싱크대', cost:c, note:'정액 1식' });
-      itemTotal += c;
-    }
+    
     if ($('bath_on').checked) {
       const c = ITEM.bath_flat;
       items.push({ name:'욕실', cost:c, note:'정액 1개' });
