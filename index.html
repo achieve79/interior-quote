@@ -385,7 +385,57 @@
   const type = $('film_type')?.value || '미선택';
   items.push({ name:'필름', cost:c, note:`정액 세트 / ${type}` });
   itemTotal += c;
+}// ✅ 붙박이장 (자당 180,000원)
+if ($('closet_on').checked) {
+  const ja = Number($('closet_ja').value || 0);
+  const c = ja * ITEM.closet_per_ja;
+
+  if (ja > 0) {
+    items.push({
+      name: '붙박이장',
+      cost: c,
+      note: `${ITEM.closet_per_ja.toLocaleString()}원/자 × ${ja}자`
+    });
+    itemTotal += c;
+  } else {
+    items.push({ name: '붙박이장', cost: 0, note: '자 수 미입력' });
+  }
 }
+
+// ✅ 싱크대 기본형 (M당 900,000원)
+if ($('sink_on').checked) {
+  const m = Number($('sink_m').value || 0);
+  const c = m * ITEM.sink_basic_per_m;
+
+  if (m > 0) {
+    items.push({
+      name: '싱크대(기본형)',
+      cost: c,
+      note: `${ITEM.sink_basic_per_m.toLocaleString()}원/M × ${m}M (수전/싱크볼/악세사리 별도)`
+    });
+    itemTotal += c;
+  } else {
+    items.push({ name: '싱크대(기본형)', cost: 0, note: '미터 수 미입력' });
+  }
+}
+
+// ✅ 신발장 (M당 900,000원)
+if ($('shoe_on').checked) {
+  const m = Number($('shoe_m').value || 0);
+  const c = m * ITEM.shoe_per_m;
+
+  if (m > 0) {
+    items.push({
+      name: '신발장',
+      cost: c,
+      note: `${ITEM.shoe_per_m.toLocaleString()}원/M × ${m}M`
+    });
+    itemTotal += c;
+  } else {
+    items.push({ name: '신발장', cost: 0, note: '미터 수 미입력' });
+  }
+}
+    
     if ($('etc_on').checked) {
       const etcName = $('etc_name').value || '기타';
       const etcPrice = Number($('etc_price').value || 0);
