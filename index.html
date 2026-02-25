@@ -80,13 +80,7 @@
 
       <h2>② 품목 공사비 (추가)</h2>
       <div class="grid3">
-        <div class="pill">
-          <input id="wpaper_on" type="checkbox" />
-          <div>
-            <div><b>도배</b> <span class="muted">(55,000원/평)</span></div>
-            <div class="muted">평수 기준 자동 계산</div>
-          </div>
-        </div>
+        
         <div class="pill">
   <input id="wpaper_on" type="checkbox" />
   <div>
@@ -97,9 +91,9 @@
 
     <div class="muted">평수 기준 자동 계산</div>
 
-    <!-- ✅ 추가: 도배 종류 선택 -->
     <div style="margin-top:8px;">
-      <select id="wpaper_type" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+      <select id="wpaper_type"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
         <option value="45000">실크 (45,000원/평)</option>
         <option value="60000">합지 (60,000원/평)</option>
       </select>
@@ -108,6 +102,7 @@
       </div>
     </div>
   </div>
+</div>
         </div>
         <div class="pill">
           <input id="floor_on" type="checkbox" />
@@ -206,7 +201,6 @@
   // 단가표(확정)
   const RATE = { basic: 300000, standard: 450000, premium: 650000 };
   const ITEM = {
-    wallpaper_per_pyeong: 55000,
     floor_per_pyeong: 80000,
     kitchen_flat: 3500000,
     bath_flat: 2800000,
@@ -225,7 +219,7 @@
   $('etc_on').addEventListener('change', () => {
     $('etcBox').style.display = $('etc_on').checked ? 'block' : 'none';
   });
-
+  $('wpaper_type').addEventListener('change', calc);
   function fmt(n){ return (Math.round(n)).toLocaleString('ko-KR'); }
 
   function calc() {
@@ -252,10 +246,14 @@
     let itemTotal = 0;
 
     if ($('wpaper_on').checked) {
-      const c = pyeong * ITEM.wallpaper_per_pyeong;
-      items.push({ name:'도배', cost:c, note:`${ITEM.wallpaper_per_pyeong.toLocaleString()}원/평 × ${pyeong}평` });
-      itemTotal += c;
-    }
+  const unit = Number($('wpaper_type').value || 0); // ✅ 실크/합지 선택 단가
+  const c = pyeong * unit;
+
+  const typeText = $('wpaper_type').selectedOptions[0].text; // 예: 실크 (45,000원/평)
+  items.push({ name:'도배', cost:c, note:`${typeText} × ${pyeong}평` });
+
+  itemTotal += c;
+}
     if ($('floor_on').checked) {
       const c = pyeong * ITEM.floor_per_pyeong;
       items.push({ name:'장판', cost:c, note:`${ITEM.floor_per_pyeong.toLocaleString()}원/평 × ${pyeong}평` });
