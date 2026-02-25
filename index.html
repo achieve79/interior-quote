@@ -104,13 +104,37 @@
   </div>
 </div>
         </div>
-        <div class="pill">
-          <input id="floor_on" type="checkbox" />
-          <div>
-            <div><b>장판</b> <span class="muted">(80,000원/평)</span></div>
-            <div class="muted">평수 기준 자동 계산</div>
-          </div>
-        </div>
+       <div class="pill">
+  <input id="floor_on" type="checkbox" />
+  <div>
+    <div>
+      <b>바닥</b>
+      <span class="muted">(선택 단가/평 + 밑작업 옵션)</span>
+    </div>
+    <div class="muted">평수 기준 자동 계산</div>
+
+    <!-- ✅ 바닥 종류 선택 -->
+    <div style="margin-top:8px;">
+      <select id="floor_type"
+        style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+        <option value="45000">장판 (45,000원/평)</option>
+        <option value="65000">데코타일(하우스타일) (65,000원/평)</option>
+        <option value="150000">마루 (150,000원/평)</option>
+        <option value="150000">타일 (150,000원/평)</option>
+        <option value="190000">대리석 (190,000원/평)</option>
+      </select>
+
+      <!-- ✅ 밑작업 옵션 -->
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700;">
+        <input id="floor_subwork" type="checkbox" style="width:auto" />
+        바닥 밑작업 필요 (종류별 평당 추가)
+      </label>
+      <div class="muted">
+        장판/데코타일: +10,000원/평 · 마루: +15,000원/평 · 타일/대리석: 기본 0원(필요시 현장 결정)
+      </div>
+    </div>
+  </div>
+</div>
         <div class="pill">
           <input id="kitchen_on" type="checkbox" />
           <div>
@@ -201,7 +225,6 @@
   // 단가표(확정)
   const RATE = { basic: 300000, standard: 450000, premium: 650000 };
   const ITEM = {
-    floor_per_pyeong: 80000,
     kitchen_flat: 3500000,
     bath_flat: 2800000,
     film_flat: 1200000
@@ -220,6 +243,8 @@
     $('etcBox').style.display = $('etc_on').checked ? 'block' : 'none';
   });
   $('wpaper_type').addEventListener('change', calc);
+  $('floor_type').addEventListener('change', calc);
+  $('floor_subwork').addEventListener('change', calc);
   function fmt(n){ return (Math.round(n)).toLocaleString('ko-KR'); }
 
   function calc() {
@@ -255,10 +280,32 @@
   itemTotal += c;
 }
     if ($('floor_on').checked) {
-      const c = pyeong * ITEM.floor_per_pyeong;
-      items.push({ name:'장판', cost:c, note:`${ITEM.floor_per_pyeong.toLocaleString()}원/평 × ${pyeong}평` });
-      itemTotal += c;
-    }
+  const unit = Number($('floor_type').value || 0); // 선택 단가(평당)
+  const typeText = $('floor_type').selectedOptions[0].text;
+
+  // 밑작업 평당 추가(종류별)
+  const subworkOn = $('floor_subwork').checked;
+
+  // 기본: 0
+  let subUnit = 0;
+
+  // 선택 텍스트로 종류 판별(간단/안전)
+  if (subworkOn) {
+    if (typeText.includes('장판') || typeText.includes('데코타일')) subUnit = 10000;
+    else if (typeText.includes('마루')) subUnit = 15000;
+    else subUnit = 0; // 타일/대리석은 기본 0 (필요시 현장 결정)
+  }
+
+  const cBase = pyeong * unit;
+  const cSub = pyeong * subUnit;
+  const c = cBase + cSub;
+
+  const noteParts = [`${typeText} × ${pyeong}평`];
+  if (subUnit > 0) noteParts.push(`밑작업 +${subUnit.toLocaleString()}원/평 × ${pyeong}평`);
+
+  items.push({ name:'바닥', cost:c, note: noteParts.join(' / ') });
+  itemTotal += c;
+}
     if ($('kitchen_on').checked) {
       const c = ITEM.kitchen_flat;
       items.push({ name:'싱크대', cost:c, note:'정액 1식' });
